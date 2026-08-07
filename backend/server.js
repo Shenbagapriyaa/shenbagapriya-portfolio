@@ -37,7 +37,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-
+// Fix Render proxy + express-rate-limit issue
+app.set('trust proxy', 1);
 // Database connection
 connectDB();
 
