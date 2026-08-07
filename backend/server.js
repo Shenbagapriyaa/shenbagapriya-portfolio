@@ -53,7 +53,10 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: [
+      "https://shenbagapriya-portfolio.vercel.app",
+      "https://shenbagapriya-portfolio-hlb1xevyo-shenbagapriya-s-projects.vercel.app"
+    ],
     credentials: true
   })
 );
