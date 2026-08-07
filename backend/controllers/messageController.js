@@ -10,7 +10,6 @@ export async function createMessage(req, res) {
     const { name, email, subject, message } = req.body;
 
 
-    // Validation
     if (!name || !email || !subject || !message) {
 
       return res.status(400).json({
@@ -21,12 +20,14 @@ export async function createMessage(req, res) {
 
 
 
-    // Gmail transporter (Render compatible)
+    // Gmail SMTP SSL (Render compatible)
     const transporter = nodemailer.createTransport({
 
-      service: "gmail",
+      host: "smtp.gmail.com",
 
-      family: 4,
+      port: 465,
+
+      secure: true,
 
       connectionTimeout: 10000,
 
@@ -43,12 +44,19 @@ export async function createMessage(req, res) {
 
       },
 
+
+      tls: {
+
+        rejectUnauthorized: false
+
+      }
+
     });
 
 
 
 
-    // Save message to MongoDB
+    // Save message first
     const doc = await Message.create({
 
       name,
@@ -65,7 +73,7 @@ export async function createMessage(req, res) {
 
 
 
-    // Send email to portfolio owner
+    // Email to portfolio owner
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
@@ -90,7 +98,7 @@ export async function createMessage(req, res) {
 
         <p>${message}</p>
 
-      `,
+      `
 
     });
 
@@ -98,8 +106,7 @@ export async function createMessage(req, res) {
 
 
 
-
-    // Auto reply email
+    // Auto reply to user
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
@@ -112,25 +119,21 @@ export async function createMessage(req, res) {
 
         <h2>Hello ${name} 👋</h2>
 
-
         <p>
           Thank you for contacting me through my portfolio.
         </p>
-
 
         <p>
           I have received your message and will get back to you soon.
         </p>
 
-
         <br/>
-
 
         <p>Regards,</p>
 
         <h3>Shenbagapriya</h3>
 
-      `,
+      `
 
     });
 
@@ -157,9 +160,8 @@ export async function createMessage(req, res) {
 
     console.log(
       "CREATE MESSAGE ERROR:",
-      error
+      error.message
     );
-
 
 
     return res.status(500).json({
@@ -180,32 +182,26 @@ export async function createMessage(req, res) {
 
 
 
-
 // GET ALL MESSAGES (Admin)
 export async function getMessages(req, res) {
 
   try {
-
 
     const docs = await Message
       .find()
       .sort({ createdAt: -1 });
 
 
-
     res.json(docs);
 
 
-
   } catch (error) {
-
 
     res.status(500).json({
 
       message: error.message,
 
     });
-
 
   }
 
@@ -216,12 +212,10 @@ export async function getMessages(req, res) {
 
 
 
-
 // MARK MESSAGE AS READ
 export async function markRead(req, res) {
 
   try {
-
 
     const doc = await Message.findByIdAndUpdate(
 
@@ -234,7 +228,6 @@ export async function markRead(req, res) {
     );
 
 
-
     if (!doc) {
 
       return res.status(404).json({
@@ -246,13 +239,10 @@ export async function markRead(req, res) {
     }
 
 
-
     res.json(doc);
 
 
-
   } catch (error) {
-
 
     res.status(500).json({
 
@@ -260,11 +250,9 @@ export async function markRead(req, res) {
 
     });
 
-
   }
 
 }
-
 
 
 
@@ -276,13 +264,11 @@ export async function deleteMessage(req, res) {
 
   try {
 
-
     const doc = await Message.findByIdAndDelete(
 
       req.params.id
 
     );
-
 
 
     if (!doc) {
@@ -296,7 +282,6 @@ export async function deleteMessage(req, res) {
     }
 
 
-
     res.json({
 
       message: "Message deleted successfully",
@@ -304,16 +289,13 @@ export async function deleteMessage(req, res) {
     });
 
 
-
   } catch (error) {
-
 
     res.status(500).json({
 
       message: error.message,
 
     });
-
 
   }
 
