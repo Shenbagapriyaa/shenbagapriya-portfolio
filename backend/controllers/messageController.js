@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 
 // CREATE MESSAGE (Contact Form)
 export async function createMessage(req, res) {
+
   try {
 
     const { name, email, subject, message } = req.body;
@@ -11,41 +12,56 @@ export async function createMessage(req, res) {
 
     // Validation
     if (!name || !email || !subject || !message) {
+
       return res.status(400).json({
         message: "All fields are required",
       });
+
     }
+
 
 
     // Gmail transporter (Render compatible)
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+
+      service: "gmail",
+
+      family: 4,
 
       connectionTimeout: 10000,
+
       greetingTimeout: 10000,
+
       socketTimeout: 10000,
 
+
       auth: {
+
         user: process.env.EMAIL_USER,
+
         pass: process.env.EMAIL_PASS.replace(/\s/g, ""),
+
       },
 
-      tls: {
-        rejectUnauthorized: false
-      }
     });
 
 
 
-    // Save message to MongoDB first
+
+    // Save message to MongoDB
     const doc = await Message.create({
+
       name,
+
       email,
+
       subject,
+
       message,
+
     });
+
+
 
 
 
@@ -61,6 +77,7 @@ export async function createMessage(req, res) {
       subject: `📩 New Portfolio Contact - ${subject}`,
 
       html: `
+
         <h2>New Portfolio Contact</h2>
 
         <p><b>Name:</b> ${name}</p>
@@ -72,12 +89,17 @@ export async function createMessage(req, res) {
         <p><b>Message:</b></p>
 
         <p>${message}</p>
+
       `,
+
     });
 
 
 
-    // Auto reply to sender
+
+
+
+    // Auto reply email
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
@@ -87,23 +109,33 @@ export async function createMessage(req, res) {
       subject: "Thank you for contacting me",
 
       html: `
+
         <h2>Hello ${name} 👋</h2>
+
 
         <p>
           Thank you for contacting me through my portfolio.
         </p>
 
+
         <p>
           I have received your message and will get back to you soon.
         </p>
 
+
         <br/>
+
 
         <p>Regards,</p>
 
         <h3>Shenbagapriya</h3>
+
       `,
+
     });
+
+
+
 
 
 
@@ -119,10 +151,15 @@ export async function createMessage(req, res) {
 
 
 
+
   } catch (error) {
 
 
-    console.log("CREATE MESSAGE ERROR:", error);
+    console.log(
+      "CREATE MESSAGE ERROR:",
+      error
+    );
+
 
 
     return res.status(500).json({
@@ -135,7 +172,10 @@ export async function createMessage(req, res) {
 
 
   }
+
 }
+
+
 
 
 
@@ -146,15 +186,19 @@ export async function getMessages(req, res) {
 
   try {
 
+
     const docs = await Message
       .find()
       .sort({ createdAt: -1 });
 
 
+
     res.json(docs);
 
 
+
   } catch (error) {
+
 
     res.status(500).json({
 
@@ -162,9 +206,12 @@ export async function getMessages(req, res) {
 
     });
 
+
   }
 
 }
+
+
 
 
 
@@ -217,6 +264,8 @@ export async function markRead(req, res) {
   }
 
 }
+
+
 
 
 
