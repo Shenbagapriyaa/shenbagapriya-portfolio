@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 // CREATE MESSAGE (Contact Form)
 export async function createMessage(req, res) {
   try {
+
     const { name, email, subject, message } = req.body;
 
 
@@ -16,25 +17,29 @@ export async function createMessage(req, res) {
     }
 
 
-    // Create transporter after dotenv is loaded
+    // Gmail transporter (Render compatible)
     const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS.replace(/\s/g, ""),
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
 
-    // Test email connection
-    await transporter.verify();
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS.replace(/\s/g, ""),
+      },
+
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
 
 
-    // Save message to MongoDB
+
+    // Save message to MongoDB first
     const doc = await Message.create({
       name,
       email,
@@ -43,12 +48,18 @@ export async function createMessage(req, res) {
     });
 
 
+
     // Send email to portfolio owner
     await transporter.sendMail({
+
       from: process.env.EMAIL_USER,
+
       to: process.env.EMAIL_USER,
+
       replyTo: email,
+
       subject: `📩 New Portfolio Contact - ${subject}`,
+
       html: `
         <h2>New Portfolio Contact</h2>
 
@@ -65,11 +76,16 @@ export async function createMessage(req, res) {
     });
 
 
+
     // Auto reply to sender
     await transporter.sendMail({
+
       from: process.env.EMAIL_USER,
+
       to: email,
+
       subject: "Thank you for contacting me",
+
       html: `
         <h2>Hello ${name} 👋</h2>
 
@@ -81,113 +97,175 @@ export async function createMessage(req, res) {
           I have received your message and will get back to you soon.
         </p>
 
-        <br>
+        <br/>
 
         <p>Regards,</p>
+
         <h3>Shenbagapriya</h3>
       `,
     });
 
 
+
     return res.status(201).json({
+
       success: true,
+
       message: "Message sent successfully",
+
       data: doc,
+
     });
+
 
 
   } catch (error) {
 
-    console.log("CREATE MESSAGE ERROR:", error.message);
+
+    console.log("CREATE MESSAGE ERROR:", error);
+
 
     return res.status(500).json({
+
       success: false,
+
       message: error.message,
+
     });
+
 
   }
 }
 
 
 
+
+
 // GET ALL MESSAGES (Admin)
 export async function getMessages(req, res) {
+
   try {
 
     const docs = await Message
       .find()
       .sort({ createdAt: -1 });
 
+
     res.json(docs);
+
 
   } catch (error) {
 
     res.status(500).json({
+
       message: error.message,
+
     });
 
   }
+
 }
+
+
 
 
 
 // MARK MESSAGE AS READ
 export async function markRead(req, res) {
+
   try {
 
+
     const doc = await Message.findByIdAndUpdate(
+
       req.params.id,
+
       { read: true },
+
       { new: true }
+
     );
 
 
+
     if (!doc) {
+
       return res.status(404).json({
+
         message: "Message not found",
+
       });
+
     }
+
 
 
     res.json(doc);
 
+
+
   } catch (error) {
 
+
     res.status(500).json({
+
       message: error.message,
+
     });
 
+
   }
+
 }
+
+
 
 
 
 // DELETE MESSAGE
 export async function deleteMessage(req, res) {
+
   try {
 
+
     const doc = await Message.findByIdAndDelete(
+
       req.params.id
+
     );
 
 
+
     if (!doc) {
+
       return res.status(404).json({
+
         message: "Message not found",
+
       });
+
     }
 
 
+
     res.json({
+
       message: "Message deleted successfully",
+
     });
+
 
 
   } catch (error) {
 
+
     res.status(500).json({
+
       message: error.message,
+
     });
 
+
   }
+
 }
