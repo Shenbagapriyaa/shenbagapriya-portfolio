@@ -17,7 +17,7 @@ export default function Contact() {
     e.preventDefault();
     setStatus({ state: 'sending', text: 'Sending…' });
     try {
-      await api.post('/messages', form);
+      await api.post('/api/messages', form);
       setStatus({ state: 'success', text: '✓ Message sent — I will get back to you soon!' });
       setForm({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
