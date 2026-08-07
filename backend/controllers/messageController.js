@@ -1,5 +1,7 @@
 import Message from '../models/Message.js';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 // CREATE MESSAGE (Contact Form)
@@ -20,43 +22,7 @@ export async function createMessage(req, res) {
 
 
 
-    // Gmail SMTP SSL (Render compatible)
-    const transporter = nodemailer.createTransport({
-
-      host: "smtp.gmail.com",
-
-      port: 465,
-
-      secure: true,
-
-      connectionTimeout: 10000,
-
-      greetingTimeout: 10000,
-
-      socketTimeout: 10000,
-
-
-      auth: {
-
-        user: process.env.EMAIL_USER,
-
-        pass: process.env.EMAIL_PASS.replace(/\s/g, ""),
-
-      },
-
-
-      tls: {
-
-        rejectUnauthorized: false
-
-      }
-
-    });
-
-
-
-
-    // Save message first
+    // Save message to MongoDB first
     const doc = await Message.create({
 
       name,
@@ -71,12 +37,10 @@ export async function createMessage(req, res) {
 
 
 
+    // Send email to portfolio owner
+    await resend.emails.send({
 
-
-    // Email to portfolio owner
-    await transporter.sendMail({
-
-      from: process.env.EMAIL_USER,
+      from: "onboarding@resend.dev",
 
       to: process.env.EMAIL_USER,
 
@@ -98,18 +62,16 @@ export async function createMessage(req, res) {
 
         <p>${message}</p>
 
-      `
+      `,
 
     });
 
 
 
+    // Auto reply to visitor
+    await resend.emails.send({
 
-
-    // Auto reply to user
-    await transporter.sendMail({
-
-      from: process.env.EMAIL_USER,
+      from: "onboarding@resend.dev",
 
       to: email,
 
@@ -133,12 +95,9 @@ export async function createMessage(req, res) {
 
         <h3>Shenbagapriya</h3>
 
-      `
+      `,
 
     });
-
-
-
 
 
 
@@ -151,7 +110,6 @@ export async function createMessage(req, res) {
       data: doc,
 
     });
-
 
 
 
@@ -172,11 +130,9 @@ export async function createMessage(req, res) {
 
     });
 
-
   }
 
 }
-
 
 
 
@@ -211,11 +167,11 @@ export async function getMessages(req, res) {
 
 
 
-
 // MARK MESSAGE AS READ
 export async function markRead(req, res) {
 
   try {
+
 
     const doc = await Message.findByIdAndUpdate(
 
@@ -258,11 +214,11 @@ export async function markRead(req, res) {
 
 
 
-
 // DELETE MESSAGE
 export async function deleteMessage(req, res) {
 
   try {
+
 
     const doc = await Message.findByIdAndDelete(
 
