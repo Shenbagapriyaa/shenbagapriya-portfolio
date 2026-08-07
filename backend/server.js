@@ -23,56 +23,96 @@ import profileRoutes from './routes/profileRoutes.js';
 import githubRoutes from './routes/githubRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 
-
 // Load environment variables
 dotenv.config({ path: './.env' });
 
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "FOUND" : "MISSING");
-
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'FOUND' : 'MISSING');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const app = express();
 
-// Fix Render proxy + express-rate-limit issue
+// =====================================================
+// RENDER PROXY
+// =====================================================
 app.set('trust proxy', 1);
-// Database connection
+
+// =====================================================
+// DATABASE
+// =====================================================
 connectDB();
 
-
-// Middlewares
+// =====================================================
+// SECURITY
+// =====================================================
 app.use(
   helmet({
     crossOriginResourcePolicy: false
   })
 );
 
+// =====================================================
+// CORS
+// =====================================================
+const allowedOrigins = [
+  'https://shenbagapriya-portfolio.vercel.app'
+];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      // Requests without Origin
+      // Render health checks / Postman / server requests
+      if (!origin) {
+        return callback(null, true);
+      }
 
+      // Main Vercel production domain
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Vercel preview deployment domains
       if (
-        origin.endsWith(".vercel.app")
+        origin.endsWith('.vercel.app') &&
+        origin.includes('shenbagapriya-portfolio')
       ) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      console.log('CORS blocked origin:', origin);
+
+      return callback(null, false);
     },
-    credentials: true
+
+    credentials: true,
+
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization'
+    ]
   })
 );
 
+// Explicitly handle preflight requests
+app.options('*', cors());
 
+// =====================================================
+// BODY PARSER
+// =====================================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-
+// =====================================================
+// LOGGER
+// =====================================================
 app.use(
   morgan(
     process.env.NODE_ENV === 'production'
@@ -81,8 +121,9 @@ app.use(
   )
 );
 
-
-// Rate limiting
+// =====================================================
+// RATE LIMITING
+// =====================================================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 150,
@@ -93,38 +134,40 @@ const limiter = rateLimit({
   }
 });
 
-
 app.use('/api/', limiter);
 
-
+// Login rate limiter
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     message: 'Too many login attempts, please try again later.'
   }
 });
 
-
-// Static files
+// =====================================================
+// STATIC UPLOADS
+// =====================================================
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'))
 );
 
+// =====================================================
+// HEALTH CHECK
+// =====================================================
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    time: new Date().toISOString()
+  });
+});
 
-// Health check
-app.get(
-  '/api/health',
-  (req, res) =>
-    res.json({
-      status: 'ok',
-      time: new Date().toISOString()
-    })
-);
-
-
-// Routes
+// =====================================================
+// API ROUTES
+// =====================================================
 app.use('/api/auth', authLimiter, authRoutes);
 
 app.use('/api/projects', projectRoutes);
@@ -147,16 +190,20 @@ app.use('/api/github', githubRoutes);
 
 app.use('/api/upload', uploadRoutes);
 
-
-// Error handlers
+// =====================================================
+// 404 HANDLER
+// =====================================================
 app.use(notFound);
 
+// =====================================================
+// ERROR HANDLER
+// =====================================================
 app.use(errorHandler);
 
-
-// Server start
+// =====================================================
+// SERVER
+// =====================================================
 const PORT = process.env.PORT || 5000;
-
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
