@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+
+body {
+  @apply font-body text-ink;
+  background: linear-gradient(180deg, #FCFCFD 0%, #F4F8FF 40%, #F8F6FF 100%);
+  overflow-x: hidden;
+}
+
+::selection { background: rgba(124,111,224,0.25); }
+
+.glass {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(90,80,180,0.09);
+}
+
+.eyebrow {
+  @apply font-mono text-[12.5px] tracking-[0.14em] uppercase text-violetDeep font-medium;
+}
+
+.section-shell {
+  @apply max-w-6xl mx-auto px-[6vw] py-28;
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-transform duration-300;
+}
+.btn:hover { transform: translateY(-3px); }
+.btn-primary {
+  background: linear-gradient(135deg, #7C6FE0, #5B4FD1);
+  @apply text-white shadow-lg;
+}
+.btn-ghost {
+  @apply glass text-ink;
+}
+
+.tag {
+  @apply text-[11.5px] font-semibold px-3 py-1.5 rounded-full;
+  background: rgba(124,111,224,0.1);
+  color: #5B4FD1;
+}
