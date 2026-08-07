@@ -53,10 +53,17 @@ app.use(
 
 app.use(
   cors({
-    origin: [
-      "https://shenbagapriya-portfolio.vercel.app",
-      "https://shenbagapriya-portfolio-hlb1xevyo-shenbagapriya-s-projects.vercel.app"
-    ],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   })
 );
