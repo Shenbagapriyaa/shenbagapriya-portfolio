@@ -44,12 +44,12 @@ export default function Hero() {
   }
 
   return (
-    <section id="home" className="min-h-screen flex items-center px-[6vw] pt-32 pb-16 max-w-6xl mx-auto gap-14 flex-wrap">
+   <section id="home" className="min-h-screen flex items-center px-4 md:px-[6vw] pt-32 pb-16 max-w-6xl mx-auto gap-8 md:gap-14 flex-wrap lg:flex-nowrap">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="flex-[1.15] min-w-[320px]"
+        className="flex-[1.15] min-w-0"
       >
         {profile.openToWork && (
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm font-semibold mb-6">
@@ -95,11 +95,11 @@ export default function Hero() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="flex-[0.85] min-w-[280px] flex justify-center"
+        className="flex-[0.85] min-w-0 flex justify-center"
         onMouseMove={handleMouseMove}
         onMouseLeave={resetMove}
       >
-        <div className="relative w-[min(78vw,340px)] h-[min(78vw,340px)]">
+        <div className="relative w-[min(70vw,340px)] h-[min(70vw,340px)]">
           <div
             className="absolute -inset-5 rounded-full border border-white/80 animate-[spin_16s_linear_infinite]"
             style={{ background: 'conic-gradient(from 0deg, rgba(124,111,224,0.25), rgba(255,159,199,0.2), rgba(143,199,255,0.25), rgba(124,111,224,0.25))' }}
@@ -110,27 +110,28 @@ export default function Hero() {
             style={{ boxShadow: '0 25px 60px rgba(90,80,180,0.28), 0 0 0 8px rgba(255,255,255,0.6)' }}
           >
             <img src="/profile.jpg" alt={profile.name} className="w-full h-full object-cover object-top" />
-          </div><div className="absolute top-[6%] -left-[8%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce">
+          </div><div className="absolute top-[6%] left-0 md:-left-[8%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce">
   🧩 MERN Stack
 </div>
 
-<div className="absolute top-[45%] -right-[28%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:1s]">
+<div className="absolute top-[45%] -right-[12%] md:-right-[28%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:1s]">
   ⚙️ Software Developer
 
 </div>
 
-<div className="absolute bottom-[12%] -right-[20%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:0.4s]">
+<div className="absolute bottom-[12%] -right-[8%] md:-right-[20%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:0.4s]">
   🏆 Hackathon Finalist
 </div>
 
-<div className="absolute bottom-[12%] -left-[20%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:0.4s]">
+<div className="absolute bottom-[12%] -left-[8%] md:-left-[20%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:0.4s]">
   📄 IEEE Published
 </div>
 
-<div className="absolute top-[45%] -left-[24%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:1s]">
+<div className="absolute top-[45%] -left-[12%] md:-left-[28%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce [animation-delay:1s]">
   🥇 Tech Event Winner
+
 </div>
-<div className="absolute top-[6%] -right-[8%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce">
+<div className="absolute top-[6%] right-0 md:-right-[8%] px-3.5 py-2 rounded-2xl glass text-xs font-semibold animate-bounce">
   ✨ Ideas to Impact
 </div>
 
