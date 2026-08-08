@@ -6,253 +6,178 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // CREATE MESSAGE (Contact Form)
 export async function createMessage(req, res) {
-
   try {
-
     const { name, email, subject, message } = req.body;
 
-
+    // Validation
     if (!name || !email || !subject || !message) {
-
       return res.status(400).json({
-        message: "All fields are required",
+        success: false,
+        message: 'All fields are required',
       });
-
     }
 
+    // Check Resend API key
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is missing');
 
+      return res.status(500).json({
+        success: false,
+        message: 'Email service is not configured',
+      });
+    }
 
     // Save message to MongoDB first
     const doc = await Message.create({
-
       name,
-
       email,
-
       subject,
-
       message,
-
     });
 
-
-
-    // Send email to portfolio owner
-    await resend.emails.send({
-
-      from: "onboarding@resend.dev",
-
-      to: process.env.EMAIL_USER,
-
+    // Send notification email to portfolio owner
+    const ownerEmail = await resend.emails.send({
+      from: 'Portfolio <onboarding@resend.dev>',
+      to: [process.env.EMAIL_USER],
       replyTo: email,
-
       subject: `📩 New Portfolio Contact - ${subject}`,
-
       html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>New Portfolio Contact</h2>
 
-        <h2>New Portfolio Contact</h2>
+          <p><strong>Name:</strong> ${name}</p>
 
-        <p><b>Name:</b> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
 
-        <p><b>Email:</b> ${email}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
 
-        <p><b>Subject:</b> ${subject}</p>
+          <p><strong>Message:</strong></p>
 
-        <p><b>Message:</b></p>
-
-        <p>${message}</p>
-
+          <p>${message}</p>
+        </div>
       `,
-
     });
 
+    console.log('Owner email result:', ownerEmail);
 
-
-    // Auto reply to visitor
-    await resend.emails.send({
-
-      from: "onboarding@resend.dev",
-
-      to: email,
-
-      subject: "Thank you for contacting me",
-
+    // Send automatic reply to visitor
+    const visitorEmail = await resend.emails.send({
+      from: 'Shenbagapriya Portfolio <onboarding@resend.dev>',
+      to: [email],
+      subject: 'Thank you for contacting me',
       html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>Hello ${name} 👋</h2>
 
-        <h2>Hello ${name} 👋</h2>
+          <p>
+            Thank you for contacting me through my portfolio.
+          </p>
 
-        <p>
-          Thank you for contacting me through my portfolio.
-        </p>
+          <p>
+            I have received your message and will get back to you soon.
+          </p>
 
-        <p>
-          I have received your message and will get back to you soon.
-        </p>
+          <br />
 
-        <br/>
-
-        <p>Regards,</p>
-
-        <h3>Shenbagapriya</h3>
-
+          <p>Regards,</p>
+          <h3>Shenbagapriya</h3>
+        </div>
       `,
-
     });
 
-
+    console.log('Visitor email result:', visitorEmail);
 
     return res.status(201).json({
-
       success: true,
-
-      message: "Message sent successfully",
-
+      message: 'Message sent successfully',
       data: doc,
-
     });
-
-
 
   } catch (error) {
-
-
-    console.log(
-      "CREATE MESSAGE ERROR:",
-      error.message
-    );
-
+    console.error('CREATE MESSAGE ERROR:', error);
 
     return res.status(500).json({
-
       success: false,
-
-      message: error.message,
-
+      message: error?.message || 'Failed to send message',
     });
-
   }
-
 }
-
-
-
 
 
 // GET ALL MESSAGES (Admin)
 export async function getMessages(req, res) {
-
   try {
-
     const docs = await Message
       .find()
       .sort({ createdAt: -1 });
 
-
-    res.json(docs);
-
+    return res.json(docs);
 
   } catch (error) {
+    console.error('GET MESSAGES ERROR:', error);
 
-    res.status(500).json({
-
+    return res.status(500).json({
+      success: false,
       message: error.message,
-
     });
-
   }
-
 }
-
-
-
 
 
 // MARK MESSAGE AS READ
 export async function markRead(req, res) {
-
   try {
-
-
     const doc = await Message.findByIdAndUpdate(
-
       req.params.id,
-
       { read: true },
-
       { new: true }
-
     );
 
-
     if (!doc) {
-
       return res.status(404).json({
-
-        message: "Message not found",
-
+        success: false,
+        message: 'Message not found',
       });
-
     }
 
-
-    res.json(doc);
-
+    return res.json(doc);
 
   } catch (error) {
+    console.error('MARK READ ERROR:', error);
 
-    res.status(500).json({
-
+    return res.status(500).json({
+      success: false,
       message: error.message,
-
     });
-
   }
-
 }
-
-
-
 
 
 // DELETE MESSAGE
 export async function deleteMessage(req, res) {
-
   try {
-
-
     const doc = await Message.findByIdAndDelete(
-
       req.params.id
-
     );
 
-
     if (!doc) {
-
       return res.status(404).json({
-
-        message: "Message not found",
-
+        success: false,
+        message: 'Message not found',
       });
-
     }
 
-
-    res.json({
-
-      message: "Message deleted successfully",
-
+    return res.json({
+      success: true,
+      message: 'Message deleted successfully',
     });
-
 
   } catch (error) {
+    console.error('DELETE MESSAGE ERROR:', error);
 
-    res.status(500).json({
-
+    return res.status(500).json({
+      success: false,
       message: error.message,
-
     });
-
   }
-
 }
