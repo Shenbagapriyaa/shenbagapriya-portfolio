@@ -45,47 +45,35 @@ export async function createMessage(req, res) {
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>New Portfolio Contact</h2>
 
-          <p><strong>Name:</strong> ${name}</p>
+          <p>
+            <strong>Name:</strong> ${name}
+          </p>
 
-          <p><strong>Email:</strong> ${email}</p>
+          <p>
+            <strong>Email:</strong> ${email}
+          </p>
 
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p>
+            <strong>Subject:</strong> ${subject}
+          </p>
 
-          <p><strong>Message:</strong></p>
+          <p>
+            <strong>Message:</strong>
+          </p>
 
-          <p>${message}</p>
+          <p>
+            ${message}
+          </p>
         </div>
       `,
     });
 
     console.log('Owner email result:', ownerEmail);
 
-    // Send automatic reply to visitor
-    const visitorEmail = await resend.emails.send({
-      from: 'Shenbagapriya Portfolio <onboarding@resend.dev>',
-      to: [email],
-      subject: 'Thank you for contacting me',
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Hello ${name} 👋</h2>
-
-          <p>
-            Thank you for contacting me through my portfolio.
-          </p>
-
-          <p>
-            I have received your message and will get back to you soon.
-          </p>
-
-          <br />
-
-          <p>Regards,</p>
-          <h3>Shenbagapriya</h3>
-        </div>
-      `,
-    });
-
-    console.log('Visitor email result:', visitorEmail);
+    // IMPORTANT:
+    // Visitor auto-reply is disabled because
+    // onboarding@resend.dev can only send testing
+    // emails to the Resend account owner email.
 
     return res.status(201).json({
       success: true,
