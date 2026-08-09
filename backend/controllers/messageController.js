@@ -1,7 +1,14 @@
 import Message from '../models/Message.js';
-import { Resend } from 'resend';
+import brevo from '@getbrevo/brevo';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Brevo configuration
+const apiInstance = new brevo.TransactionalEmailsApi();
+
+apiInstance.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 
 // CREATE MESSAGE (Contact Form)
@@ -17,9 +24,9 @@ export async function createMessage(req, res) {
       });
     }
 
-    // Check Resend API key
-    if (!process.env.RESEND_API_KEY) {
-      console.error('RESEND_API_KEY is missing');
+    // Check Brevo API key
+    if (!process.env.BREVO_API_KEY) {
+      console.error('BREVO_API_KEY is missing');
 
       return res.status(500).json({
         success: false,
@@ -27,7 +34,7 @@ export async function createMessage(req, res) {
       });
     }
 
-    // Save message to MongoDB first
+    // Save message to MongoDB
     const doc = await Message.create({
       name,
       email,
@@ -35,45 +42,135 @@ export async function createMessage(req, res) {
       message,
     });
 
-    // Send notification email to portfolio owner
-    const ownerEmail = await resend.emails.send({
-      from: 'Portfolio <onboarding@resend.dev>',
-      to: [process.env.EMAIL_USER],
-      replyTo: email,
-      subject: `📩 New Portfolio Contact - ${subject}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>New Portfolio Contact</h2>
 
-          <p>
-            <strong>Name:</strong> ${name}
-          </p>
+    // =====================================================
+    // 1. SEND EMAIL TO PORTFOLIO OWNER
+    // =====================================================
 
-          <p>
-            <strong>Email:</strong> ${email}
-          </p>
+    const ownerEmail = new brevo.SendSmtpEmail();
 
-          <p>
-            <strong>Subject:</strong> ${subject}
-          </p>
+    ownerEmail.sender = {
+      name: 'Shenbagapriya Portfolio',
+      email: process.env.EMAIL_USER,
+    };
 
-          <p>
-            <strong>Message:</strong>
-          </p>
+    ownerEmail.to = [
+      {
+        email: process.env.EMAIL_USER,
+        name: 'Shenbagapriya',
+      },
+    ];
 
-          <p>
-            ${message}
-          </p>
+    ownerEmail.replyTo = {
+      email: email,
+      name: name,
+    };
+
+    ownerEmail.subject = `📩 New Portfolio Contact - ${subject}`;
+
+    ownerEmail.htmlContent = `
+      <div style="
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: auto;
+      ">
+
+        <h2>New Portfolio Contact</h2>
+
+        <p>
+          <strong>Name:</strong> ${name}
+        </p>
+
+        <p>
+          <strong>Email:</strong> ${email}
+        </p>
+
+        <p>
+          <strong>Subject:</strong> ${subject}
+        </p>
+
+        <p>
+          <strong>Message:</strong>
+        </p>
+
+        <div style="
+          padding: 15px;
+          background: #f5f5f5;
+          border-radius: 8px;
+        ">
+          ${message}
         </div>
-      `,
-    });
 
-    console.log('Owner email result:', ownerEmail);
+      </div>
+    `;
 
-    // IMPORTANT:
-    // Visitor auto-reply is disabled because
-    // onboarding@resend.dev can only send testing
-    // emails to the Resend account owner email.
+    const ownerResult = await apiInstance.sendTransacEmail(ownerEmail);
+
+    console.log('Owner email sent:', ownerResult);
+
+
+    // =====================================================
+    // 2. AUTOMATIC THANK-YOU EMAIL TO VISITOR
+    // =====================================================
+
+    const visitorEmail = new brevo.SendSmtpEmail();
+
+    visitorEmail.sender = {
+      name: 'Shenbagapriya Portfolio',
+      email: process.env.EMAIL_USER,
+    };
+
+    visitorEmail.to = [
+      {
+        email: email,
+        name: name,
+      },
+    ];
+
+    visitorEmail.replyTo = {
+      email: process.env.EMAIL_USER,
+      name: 'Shenbagapriya',
+    };
+
+    visitorEmail.subject = 'Thank you for contacting me';
+
+    visitorEmail.htmlContent = `
+      <div style="
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: auto;
+      ">
+
+        <h2>Hello ${name} 👋</h2>
+
+        <p>
+          Thank you for contacting me through my portfolio.
+        </p>
+
+        <p>
+          I have received your message and will get back to you soon.
+        </p>
+
+        <br />
+
+        <p>Regards,</p>
+
+        <h3>Shenbagapriya</h3>
+
+      </div>
+    `;
+
+    const visitorResult =
+      await apiInstance.sendTransacEmail(visitorEmail);
+
+    console.log('Visitor thank-you email sent:', visitorResult);
+
+
+    // =====================================================
+    // SUCCESS
+    // =====================================================
 
     return res.status(201).json({
       success: true,
@@ -81,20 +178,32 @@ export async function createMessage(req, res) {
       data: doc,
     });
 
+
   } catch (error) {
-    console.error('CREATE MESSAGE ERROR:', error);
+
+    console.error(
+      'CREATE MESSAGE ERROR:',
+      error?.response?.body || error
+    );
 
     return res.status(500).json({
       success: false,
-      message: error?.message || 'Failed to send message',
+      message:
+        error?.response?.body?.message ||
+        error?.message ||
+        'Failed to send message',
     });
   }
 }
 
 
-// GET ALL MESSAGES (Admin)
+// =====================================================
+// GET ALL MESSAGES
+// =====================================================
+
 export async function getMessages(req, res) {
   try {
+
     const docs = await Message
       .find()
       .sort({ createdAt: -1 });
@@ -102,6 +211,7 @@ export async function getMessages(req, res) {
     return res.json(docs);
 
   } catch (error) {
+
     console.error('GET MESSAGES ERROR:', error);
 
     return res.status(500).json({
@@ -112,9 +222,13 @@ export async function getMessages(req, res) {
 }
 
 
+// =====================================================
 // MARK MESSAGE AS READ
+// =====================================================
+
 export async function markRead(req, res) {
   try {
+
     const doc = await Message.findByIdAndUpdate(
       req.params.id,
       { read: true },
@@ -131,6 +245,7 @@ export async function markRead(req, res) {
     return res.json(doc);
 
   } catch (error) {
+
     console.error('MARK READ ERROR:', error);
 
     return res.status(500).json({
@@ -141,9 +256,13 @@ export async function markRead(req, res) {
 }
 
 
+// =====================================================
 // DELETE MESSAGE
+// =====================================================
+
 export async function deleteMessage(req, res) {
   try {
+
     const doc = await Message.findByIdAndDelete(
       req.params.id
     );
@@ -161,6 +280,7 @@ export async function deleteMessage(req, res) {
     });
 
   } catch (error) {
+
     console.error('DELETE MESSAGE ERROR:', error);
 
     return res.status(500).json({
