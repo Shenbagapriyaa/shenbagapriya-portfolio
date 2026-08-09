@@ -138,7 +138,6 @@ export default function Contact() {
           skills, problem-solving abilities, and technical knowledge to create
           meaningful products.
 
-          <br /><br />
 
           I’d love to connect and explore opportunities to contribute,
           learn and build impactful solutions.
