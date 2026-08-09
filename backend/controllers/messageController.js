@@ -1,28 +1,18 @@
 import Message from '../models/Message.js';
-
-import {
-  TransactionalEmailsApi,
-  TransactionalEmailsApiApiKeys,
-  SendSmtpEmail,
-} from '@getbrevo/brevo';
+import { BrevoClient } from '@getbrevo/brevo';
 
 
 // =====================================================
 // BREVO CONFIGURATION
 // =====================================================
 
-const apiInstance = new TransactionalEmailsApi();
-
-if (process.env.BREVO_API_KEY) {
-  apiInstance.setApiKey(
-    TransactionalEmailsApiApiKeys.apiKey,
-    process.env.BREVO_API_KEY
-  );
-}
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
+});
 
 
 // =====================================================
-// CREATE MESSAGE (CONTACT FORM)
+// CREATE MESSAGE
 // =====================================================
 
 export async function createMessage(req, res) {
@@ -56,7 +46,7 @@ export async function createMessage(req, res) {
 
       return res.status(500).json({
         success: false,
-        message: 'Email service is not configured',
+        message: 'Brevo email service is not configured',
       });
     }
 
@@ -88,71 +78,69 @@ export async function createMessage(req, res) {
     // =================================================
 
     try {
-      const ownerEmail = new SendSmtpEmail();
-
-      ownerEmail.sender = {
-        name: 'Shenbagapriya Portfolio',
-        email: process.env.EMAIL_USER,
-      };
-
-      ownerEmail.to = [
-        {
-          email: process.env.EMAIL_USER,
-          name: 'Shenbagapriya',
-        },
-      ];
-
-      ownerEmail.replyTo = {
-        email: email,
-        name: name,
-      };
-
-      ownerEmail.subject =
-        `📩 New Portfolio Contact - ${subject}`;
-
-      ownerEmail.htmlContent = `
-        <div style="
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-          max-width: 600px;
-          margin: auto;
-          padding: 20px;
-        ">
-
-          <h2>New Portfolio Contact</h2>
-
-          <p>
-            <strong>Name:</strong>
-            ${name}
-          </p>
-
-          <p>
-            <strong>Email:</strong>
-            ${email}
-          </p>
-
-          <p>
-            <strong>Subject:</strong>
-            ${subject}
-          </p>
-
-          <p>
-            <strong>Message:</strong>
-          </p>
-
-          <div style="
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
-          ">
-            ${message}
-          </div>
-
-        </div>
-      `;
-
       const ownerResult =
-        await apiInstance.sendTransacEmail(ownerEmail);
+        await brevo.transactionalEmails.sendTransacEmail({
+
+          sender: {
+            name: 'Shenbagapriya Portfolio',
+            email: process.env.EMAIL_USER,
+          },
+
+          to: [
+            {
+              email: process.env.EMAIL_USER,
+              name: 'Shenbagapriya',
+            },
+          ],
+
+          replyTo: {
+            email: email,
+            name: name,
+          },
+
+          subject: `📩 New Portfolio Contact - ${subject}`,
+
+          htmlContent: `
+            <div style="
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              max-width: 600px;
+              margin: auto;
+              padding: 20px;
+            ">
+
+              <h2>New Portfolio Contact</h2>
+
+              <p>
+                <strong>Name:</strong>
+                ${name}
+              </p>
+
+              <p>
+                <strong>Email:</strong>
+                ${email}
+              </p>
+
+              <p>
+                <strong>Subject:</strong>
+                ${subject}
+              </p>
+
+              <p>
+                <strong>Message:</strong>
+              </p>
+
+              <div style="
+                padding: 15px;
+                background: #f5f5f5;
+                border-radius: 8px;
+              ">
+                ${message}
+              </div>
+
+            </div>
+          `,
+        });
 
       console.log(
         'Owner email sent successfully:',
@@ -163,7 +151,7 @@ export async function createMessage(req, res) {
 
       console.error(
         'OWNER EMAIL ERROR:',
-        ownerError?.response?.body ||
+        ownerError?.body ||
         ownerError?.message ||
         ownerError
       );
@@ -177,73 +165,69 @@ export async function createMessage(req, res) {
 
 
     // =================================================
-    // 2. SEND AUTOMATIC THANK-YOU EMAIL TO VISITOR
+    // 2. AUTOMATIC THANK-YOU EMAIL TO VISITOR
     // =================================================
 
     let visitorEmailSent = false;
 
     try {
-      const visitorEmail = new SendSmtpEmail();
-
-      visitorEmail.sender = {
-        name: 'Shenbagapriya Portfolio',
-        email: process.env.EMAIL_USER,
-      };
-
-      visitorEmail.to = [
-        {
-          email: email,
-          name: name,
-        },
-      ];
-
-      visitorEmail.replyTo = {
-        email: process.env.EMAIL_USER,
-        name: 'Shenbagapriya',
-      };
-
-      visitorEmail.subject =
-        'Thank you for contacting me';
-
-      visitorEmail.htmlContent = `
-        <div style="
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-          max-width: 600px;
-          margin: auto;
-          padding: 20px;
-        ">
-
-          <h2>
-            Hello ${name} 👋
-          </h2>
-
-          <p>
-            Thank you for contacting me through my portfolio.
-          </p>
-
-          <p>
-            I have received your message and will get back
-            to you soon.
-          </p>
-
-          <br />
-
-          <p>
-            Regards,
-          </p>
-
-          <h3>
-            Shenbagapriya
-          </h3>
-
-        </div>
-      `;
-
       const visitorResult =
-        await apiInstance.sendTransacEmail(
-          visitorEmail
-        );
+        await brevo.transactionalEmails.sendTransacEmail({
+
+          sender: {
+            name: 'Shenbagapriya Portfolio',
+            email: process.env.EMAIL_USER,
+          },
+
+          to: [
+            {
+              email: email,
+              name: name,
+            },
+          ],
+
+          replyTo: {
+            email: process.env.EMAIL_USER,
+            name: 'Shenbagapriya',
+          },
+
+          subject: 'Thank you for contacting me',
+
+          htmlContent: `
+            <div style="
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              max-width: 600px;
+              margin: auto;
+              padding: 20px;
+            ">
+
+              <h2>
+                Hello ${name} 👋
+              </h2>
+
+              <p>
+                Thank you for contacting me through my portfolio.
+              </p>
+
+              <p>
+                I have received your message and will get back
+                to you soon.
+              </p>
+
+              <br />
+
+              <p>
+                Regards,
+              </p>
+
+              <h3>
+                Shenbagapriya
+              </h3>
+
+            </div>
+          `,
+        });
 
       console.log(
         'Visitor thank-you email sent successfully:',
@@ -256,7 +240,7 @@ export async function createMessage(req, res) {
 
       console.error(
         'VISITOR THANK-YOU EMAIL ERROR:',
-        visitorError?.response?.body ||
+        visitorError?.body ||
         visitorError?.message ||
         visitorError
       );
@@ -264,16 +248,21 @@ export async function createMessage(req, res) {
 
 
     // =================================================
-    // SUCCESS RESPONSE
+    // SUCCESS
     // =================================================
 
     return res.status(201).json({
+
       success: true,
+
       message: visitorEmailSent
         ? 'Message sent successfully'
-        : 'Message received successfully, but automatic thank-you email could not be sent.',
+        : 'Message received, but thank-you email could not be sent.',
+
       visitorEmailSent,
+
       data: doc,
+
     });
 
 
@@ -281,17 +270,19 @@ export async function createMessage(req, res) {
 
     console.error(
       'CREATE MESSAGE ERROR:',
-      error?.response?.body ||
+      error?.body ||
       error?.message ||
       error
     );
 
     return res.status(500).json({
+
       success: false,
+
       message:
-        error?.response?.body?.message ||
         error?.message ||
         'Failed to send message',
+
     });
   }
 }
