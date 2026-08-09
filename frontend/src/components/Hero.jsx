@@ -64,11 +64,21 @@ export default function Hero() {
           {typed}<span className="inline-block w-[2.5px] h-[1em] bg-violetDeep ml-1 animate-pulse" />
         </div>
         <p className="text-slate text-[16.5px] leading-relaxed max-w-lg mb-8">{profile.tagline}</p>
-        <div className="flex flex-wrap gap-3 mb-10"><a className="btn btn-primary">✦ Hire Me</a>
+        <div className="flex flex-wrap gap-3 mb-10"><a href="#contact" className="btn btn-primary">
+  ✦ Hire Me
+</a>
 
-<a className="btn btn-primary">⬇ Download Resume</a>
+<a
+  href="/resume.pdf"
+  download
+  className="btn btn-primary"
+>
+  ⬇ Download Resume
+</a>
 
-<a className="btn btn-primary">View Projects</a>
+<a href="#projects" className="btn btn-primary">
+  View Projects
+</a>
         </div>
         <div className="flex gap-4">
           {[
