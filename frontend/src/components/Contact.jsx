@@ -14,11 +14,12 @@ import api from '../api/axios.js';
 
 export default function Contact() {
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
+  name: '',
+  email: '',
+  phone: '',
+  subject: '',
+  message: ''
+});
 
   const [status, setStatus] = useState({
     state: 'idle',
@@ -57,11 +58,12 @@ export default function Contact() {
 
 
       setForm({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
-      });
+  name: '',
+  email: '',
+  phone: '',
+  subject: '',
+  message: ''
+});
 
 
     } catch (err) {
@@ -231,6 +233,14 @@ export default function Contact() {
 
 
           </div>
+          <input
+  required
+  type="tel"
+  placeholder="Contact Number"
+  value={form.phone}
+  onChange={update('phone')}
+  className="w-full px-4 py-3 mb-3.5 rounded-2xl border border-black/[0.08] bg-white/70 text-sm outline-none"
+/>
 
 
 

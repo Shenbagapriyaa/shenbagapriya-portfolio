@@ -20,6 +20,7 @@ export async function createMessage(req, res) {
     const {
       name,
       email,
+      phone,
       subject,
       message,
     } = req.body;
@@ -29,7 +30,7 @@ export async function createMessage(req, res) {
     // VALIDATION
     // =================================================
 
-    if (!name || !email || !subject || !message) {
+    if (!name || !email || !phone || !subject || !message) {
       return res.status(400).json({
         success: false,
         message: 'All fields are required',
@@ -68,6 +69,7 @@ export async function createMessage(req, res) {
     const doc = await Message.create({
       name,
       email,
+      phone,
       subject,
       message,
     });
@@ -120,6 +122,11 @@ export async function createMessage(req, res) {
                 <strong>Email:</strong>
                 ${email}
               </p>
+
+              <p>
+  <strong>Contact Number:</strong>
+  ${phone}
+</p>
 
               <p>
                 <strong>Subject:</strong>
