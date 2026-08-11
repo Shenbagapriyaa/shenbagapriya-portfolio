@@ -5,22 +5,74 @@ import { profile } from "../data/profile.js";
 
 export default function GithubStats() {
   const [stats, setStats] = useState(null);
-  const [error, setError] = useState(false);
+
+  const fallbackStats = {
+    publicRepos: 11,
+    topLanguages: [
+      ["JavaScript", 1],
+      ["Python", 1],
+      ["TypeScript", 1],
+      ["HTML", 1],
+      ["CSS", 1],
+    ],
+    topRepos: [
+      {
+        id: 1,
+        name: "3D_CAD-File-Analyzer",
+        description: "Python based 3D CAD file analyzer.",
+        stargazers_count: 0,
+        forks_count: 0,
+        language: "Python",
+        html_url:
+          "https://github.com/Shenbagapriyaa/3D_CAD-File-Analyzer",
+      },
+      {
+        id: 2,
+        name: "Alumni-Management-System",
+        description: "Full-stack Alumni Management System.",
+        stargazers_count: 0,
+        forks_count: 0,
+        language: "JavaScript",
+        html_url:
+          "https://github.com/Shenbagapriyaa/Alumni-Management-System",
+      },
+      {
+        id: 3,
+        name: "Restaurant-Booking-Website",
+        description: "Restaurant booking website.",
+        stargazers_count: 0,
+        forks_count: 0,
+        language: "JavaScript",
+        html_url:
+          "https://github.com/Shenbagapriyaa/Restaurant-Booking-Website",
+      },
+      {
+        id: 4,
+        name: "URL-Shortener",
+        description: "URL shortener web application.",
+        stargazers_count: 0,
+        forks_count: 0,
+        language: "JavaScript",
+        html_url:
+          "https://github.com/Shenbagapriyaa/URL-Shortener",
+      },
+    ],
+  };
 
   useEffect(() => {
     async function load() {
       try {
-        setError(false);
-
         const [userRes, reposRes] = await Promise.all([
-          fetch(`https://api.github.com/users/${profile.githubUsername}`),
+          fetch(
+            `https://api.github.com/users/${profile.githubUsername}`
+          ),
           fetch(
             `https://api.github.com/users/${profile.githubUsername}/repos?sort=updated&per_page=100`
           ),
         ]);
 
         if (!userRes.ok) {
-          throw new Error("Failed to fetch GitHub user");
+          throw new Error("GitHub API unavailable");
         }
 
         const user = await userRes.json();
@@ -41,12 +93,15 @@ export default function GithubStats() {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5),
           topRepos: repos
-            .sort((a, b) => b.stargazers_count - a.stargazers_count)
+            .sort(
+              (a, b) =>
+                b.stargazers_count - a.stargazers_count
+            )
             .slice(0, 4),
         });
       } catch (err) {
-        console.error("GitHub Error:", err);
-        setError(true);
+        console.log("Using saved GitHub data");
+        setStats(fallbackStats);
       }
     }
 
@@ -59,21 +114,12 @@ export default function GithubStats() {
         Live from GitHub
       </h3>
 
-      {/* Loading */}
-      {!stats && !error && (
+      {!stats && (
         <p className="text-slate text-sm">
           Loading GitHub activity...
         </p>
       )}
 
-      {/* Error */}
-      {error && !stats && (
-        <p className="text-slate text-sm">
-          Couldn't load GitHub stats right now — check back shortly.
-        </p>
-      )}
-
-      {/* Stats */}
       {stats && (
         <>
           <motion.div
@@ -81,7 +127,6 @@ export default function GithubStats() {
             animate={{ opacity: 1 }}
             className="grid sm:grid-cols-3 gap-5 mb-6"
           >
-            {/* Public Repositories */}
             <div className="glass rounded-2xl p-5 text-center">
               <b className="font-display text-2xl font-extrabold">
                 {stats.publicRepos}
@@ -91,7 +136,6 @@ export default function GithubStats() {
               </span>
             </div>
 
-            {/* Featured Projects */}
             <div className="glass rounded-2xl p-5 text-center">
               <b className="font-display text-2xl font-extrabold">
                 {stats.topRepos.length}
@@ -101,7 +145,6 @@ export default function GithubStats() {
               </span>
             </div>
 
-            {/* Languages */}
             <div className="glass rounded-2xl p-5 text-center">
               <b className="font-display text-2xl font-extrabold">
                 {stats.topLanguages.length}
@@ -112,7 +155,6 @@ export default function GithubStats() {
             </div>
           </motion.div>
 
-          {/* Top Repositories */}
           {stats.topRepos.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-4">
               {stats.topRepos.map((repo) => (
@@ -123,10 +165,13 @@ export default function GithubStats() {
                   rel="noreferrer"
                   className="glass rounded-2xl p-4 hover:-translate-y-1 transition-transform"
                 >
-                  <p className="font-semibold text-sm">{repo.name}</p>
+                  <p className="font-semibold text-sm">
+                    {repo.name}
+                  </p>
 
                   <p className="text-xs text-slate mt-1 line-clamp-2">
-                    {repo.description || "No description provided."}
+                    {repo.description ||
+                      "No description provided."}
                   </p>
 
                   <div className="flex items-center gap-4 mt-3 text-xs text-slate">
